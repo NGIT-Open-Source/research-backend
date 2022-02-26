@@ -8,9 +8,10 @@ import random
 import jwt
 import email 
 import smtplib,ssl
+from datetime import datetime
+import flask
 
-
-from flask import jsonify
+from flask import jsonify, session
 from functools import wraps
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -209,11 +210,54 @@ def forgot_password():
     TEXT = "Verification email for your authentication : {}".format(random_otp)
     mail_txt = 'Subject: {}\n\n{}'.format(SUBJECT, TEXT)
     context = ssl.create_default_context()
+
+    #initialising smtp server
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, mail_txt)
     f = None
+
+    # storing generated otp in new collection which is indexed with ttl
+    db = client['research']
+    collection = db["otp_client"]
+    collection.create_index("createdAt", expireAfterSeconds=600)
+    collection.insert_one({"createdAt": datetime.utcnow(),
+   "user": user,
+   "otp": random_otp})
+
+    # storing otp 
     return "sent"
+
+#otp validation part
+@app.route("/forgot_pw_check" ,  methods =['POST' , "GET"])
+def forgot_password_validity():
+
+    #retrive otp from requests
+    otp = request.json["otp"]
+    user = request.headers["user_id"]
+    
+    #edge cases
+    if not otp or not user:
+        return jsonify({"otp_verified" : False ,login : False, "token" :  None}) , 401
+
+    #connecting to mongo client
+    db = client['research']
+    collection = db["otp_client"]
+    user_obj = collection.find_one({"user" : user})
+    auth_obj = db["research_auth"].find_one({"name" : user})
+
+    #validatioin and jwt generation
+    if user_obj and user_obj["otp"] == otp:
+        print(auth_obj["_id"])
+        token = jwt.encode({
+            'public_id':auth_obj["_id"],
+            'exp' : datetime.utcnow() + timedelta(weeks = 2) 
+        }, app.config['SECRET_KEY'] )
+        print(token)
+
+        #resopnse
+        return flask.jsonify(otp_verified = True , login = True , token = token)
+    return flask.jsonify(otp_verified = False , login = False , token = None)
 
 load_dotenv()
 app.run(debug = True)
