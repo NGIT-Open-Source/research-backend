@@ -106,12 +106,7 @@ def file_upload(current_user):
     db = client['research']
     collection = db["research_auth"]
     collection.update_one({"_id" : current_user["_id"]} , {"$set" : {"patients" : current_user["patients"]}})
-
-
-
     return "hoillaaaa"
-
-
 load_dotenv()
 
 
