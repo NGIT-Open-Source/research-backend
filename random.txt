@@ -1,0 +1,6 @@
+git status
+git add .
+git status
+git commit -m "API configuration"
+
+git push -u origin main

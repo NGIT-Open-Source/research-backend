@@ -55,11 +55,30 @@ def token_required(f):
         return  f(current_user, *args, **kwargs)
     return decorated
 
+def API_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # jwt is passed in the request header
+        if 'X-API-Key' in request.headers:
+            api_key = request.headers['X-API-Key']
+        if not api_key:
+            return jsonify({'message' : 'APIKEY is missing !!'}), 401
+        if str(api_key) == str(os.getenv('API_KEY')):
+            # print("thank god")
+            pass
+        else:
+            return jsonify({
+                'message' : 'Token is invalid !!'
+            }), 401
 
+        # returns the current logged in users contex to the routes
+        return  f( *args, **kwargs)
+    return decorated
 
 
 
 @app.route('/signup', methods =['POST' , "GET"])
+@API_required
 def signup():
 
     #data aquired from requests
@@ -113,6 +132,7 @@ def signup():
 
 
 @app.route('/login', methods =['POST' , "GET"])
+@API_required
 def login():
 
     #data from requests
@@ -157,6 +177,7 @@ def login():
 
 #default route called when app is initialized 
 @app.route('/test')
+@API_required
 @token_required
 def test(current_user):
     print(current_user)
@@ -164,11 +185,13 @@ def test(current_user):
 
 #default testing route
 @app.route("/")
+@API_required
 def default():
     return redirect("/signup")
 
 # route for forgot pw
 @app.route("/forgot_password" ,  methods =['POST' , "GET"])
+@API_required
 def forgot_password():
 
     #data from requests and connecting to mongo instace
@@ -215,6 +238,7 @@ def forgot_password():
 
 #otp validation part
 @app.route("/forgot_pw_check" ,  methods =['POST' , "GET"])
+@API_required
 def forgot_password_validity():
 
     #retrive otp from requests
@@ -245,3 +269,6 @@ def forgot_password_validity():
     return flask.jsonify(otp_verified = False , login = False , token = None)
 
 load_dotenv()
+
+
+# print(os.getenv('EMAIL_PASSWORD'))
