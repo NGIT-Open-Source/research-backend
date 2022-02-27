@@ -14,6 +14,7 @@ import flask
 from flask import jsonify, session
 from functools import wraps
 from dotenv import load_dotenv
+from genetics import app,client
 from pymongo import MongoClient
 from email.mime.base import MIMEBase
 from flask_mail import Mail, Message
@@ -24,23 +25,7 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, make_response , redirect
 from  werkzeug.security import generate_password_hash, check_password_hash
 
-
-
 #inits
-
-app = Flask(__name__)
-mail = Mail(app)
-client = MongoClient('mongodb://localhost:27017')
-
-#configs
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_SERVER']='smtp.gmail.com'
-app.config['SECRET_KEY'] = 'heyypeepssyougottahavethiskey'
-app.config['MAIL_USERNAME'] = 'freelacerhiring@gmail.com'
-
-#decorator to verify jwt in requests
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -260,5 +245,3 @@ def forgot_password_validity():
     return flask.jsonify(otp_verified = False , login = False , token = None)
 
 load_dotenv()
-app.run(debug = True)
-
