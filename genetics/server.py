@@ -98,7 +98,14 @@ def signup():
             "_id" : str(uuid.uuid4()),
             "name" : user,
             "email" : email,
-            "password" : generate_password_hash(pw)
+            "password" : generate_password_hash(pw) ,
+            "patients" : {
+                "default" : {
+                    "default_label" : {
+                        "label" : []
+                    }
+                }
+            }
             }
         
         #connecting to mongo client
@@ -115,13 +122,14 @@ def signup():
         token = jwt.encode({
             'public_id':auth_obj["_id"],
             'exp' : datetime.utcnow() + timedelta(weeks = 2)
-        }, app.config['SECRET_KEY'] , algorithms=["HS256"])
+        }, app.config['SECRET_KEY'] )
 
 
         return make_response(jsonify({"email_exits" : False , 'token' : token}), 201)
 
 
-    except:
+    except Exception as e:
+        print(e)
         return  make_response(
                 'Could not verify',
                 401,

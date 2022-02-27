@@ -25,3 +25,4 @@ app.config['MAIL_USERNAME'] = 'freelacerhiring@gmail.com'
 
 #decorator to verify jwt in requests
 from genetics import server
+from genetics import file_upload
