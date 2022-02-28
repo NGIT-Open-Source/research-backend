@@ -70,7 +70,7 @@ def API_required(f):
 
 
 
-@app.route("/file_upload" , methods =['POST', "GET" ])
+@app.route("/file_upload" , methods =['POST' ])
 @API_required
 @token_required
 def file_upload(current_user):
@@ -79,9 +79,11 @@ def file_upload(current_user):
     data = request.get_json()
     # print(type(data))
     # input()
-    patient  , body_label , label , filee = data["patient_name"] ,data["body_part"],data["label"],data["file"]
+    patient  , body_label , label , filee = data["patient_name"] ,data["body_part"],data["label"],data["file_id"]
     # print()
     # print(current_user)
+    if not patient or not body_label or not label or not filee:
+        return jsonify({"messgae" : "invalid labeling or empty labeling"}) , 401
     if patient in current_user["patients"].keys():
 
         if body_label in current_user["patients"][patient].keys():
@@ -106,7 +108,17 @@ def file_upload(current_user):
     db = client['research']
     collection = db["research_auth"]
     collection.update_one({"_id" : current_user["_id"]} , {"$set" : {"patients" : current_user["patients"]}})
-    return "hoillaaaa"
+    del current_user["password"]
+    return current_user , 200
+
+
+@app.route("/get_Data" , methods =['GET' ])
+@API_required
+@token_required
+def get_Data(current_user):
+    del current_user["password"] 
+    return jsonify(current_user) , 200
+
 load_dotenv()
 
 

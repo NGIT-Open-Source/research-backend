@@ -2,6 +2,7 @@
 from flask import jsonify, send_file, send_from_directory, session , request
 from functools import wraps
 from dotenv import load_dotenv
+from itsdangerous import json
 from Storage import app
 import os
 import uuid
@@ -29,10 +30,13 @@ def API_required(f):
 @app.route("/upload" , methods =['POST'])
 @API_required
 def upload():
-    file = request.files["filee"]
-    filename= str(uuid.uuid4()) + ".dcm"
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename ))
-    return filename 
+    try:
+        file = request.files["filee"]
+        filename= str(uuid.uuid4()) + ".dcm"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename ))
+        return jsonify(uploaded="success" , file_id = filename) , 200
+    except :
+        return jsonify(uploaded="fail" , file_id = None) , 403
 
 @app.route("/download" , methods =['GET'])
 # @API_required
@@ -40,5 +44,7 @@ def dowload():
     args = request.args
     id = args.get('id')
     print(id , app.config["UPLOAD_FOLDER"] + id + ".dcm")
+    
+    try:return send_file(app.config["UPLOAD_FOLDER"] + "\\" + id + ".dcm", as_attachment=True)
+    except:return jsonify(file_error = True) , 403
 
-    return send_file(app.config["UPLOAD_FOLDER"] + "\\" + id + ".dcm", as_attachment=True)

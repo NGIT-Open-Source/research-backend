@@ -48,7 +48,7 @@ def token_required(f):
             current_user = collection.find_one({"_id":data["public_id"]})
         except:
             return jsonify({
-                'message' : 'Token is invalid !!'
+                'message' : 'unable to find user'
             }), 401
 
         # returns the current logged in users contex to the routes
@@ -62,13 +62,13 @@ def API_required(f):
         if 'X-API-Key' in request.headers:
             api_key = request.headers['X-API-Key']
         if not api_key:
-            return jsonify({'message' : 'APIKEY is missing !!'}), 401
+            return jsonify({'message' : 'APIKEY is missing !!'}), 511
         if str(api_key) == str(os.getenv('API_KEY')):
             # print("thank god")
             pass
         else:
             return jsonify({
-                'message' : 'Token is invalid !!'
+                'message' : 'api_key is invalid !!'
             }), 401
 
         # returns the current logged in users contex to the routes
@@ -77,7 +77,7 @@ def API_required(f):
 
 
 
-@app.route('/signup', methods =['POST' , "GET"])
+@app.route('/signup', methods =['POST' ])
 @API_required
 def signup():
 
@@ -139,10 +139,9 @@ def signup():
 
 
 
-@app.route('/login', methods =['POST' , "GET"])
+@app.route('/login', methods =['POST' ])
 @API_required
 def login():
-
     #data from requests
     data = request.json
     try:
@@ -156,7 +155,6 @@ def login():
                 401,
                 {'WWW-Authenticate' : 'Basic realm ="Login required !!"'}
             )
-
         #connecting to mongo instance
         db = client['research']
         collection = db["research_auth"]
@@ -172,7 +170,8 @@ def login():
             'public_id':user_obj["_id"],
             'exp' : datetime.utcnow() + timedelta(weeks = 2)
             }, app.config['SECRET_KEY'])
-
+        else:
+            return jsonify({"user_exits" : True ,login : False, "token" : None}) , 401
 
         return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : token}), 201)
     except:
@@ -195,16 +194,18 @@ def test(current_user):
 @app.route("/")
 @API_required
 def default():
-    return redirect("/signup")
+    return redirect("/signup") , 301
 
 # route for forgot pw
-@app.route("/forgot_password" ,  methods =['POST' , "GET"])
+@app.route("/forgot_password" ,  methods =['POST' ])
 @API_required
 def forgot_password():
 
     #data from requests and connecting to mongo instace
     data = request.json
     user =  data["user"]
+    if not user:
+        return jsonify({"user_exits" : False ,login : False, "token" :  None}) , 205
     db = client['research']
     collection = db["research_auth"]
 
@@ -237,15 +238,21 @@ def forgot_password():
     db = client['research']
     collection = db["otp_client"]
     collection.create_index("createdAt", expireAfterSeconds=600)
-    collection.insert_one({"createdAt": datetime.utcnow(),
-   "user": user,
-   "otp": random_otp})
+    if collection.find_one({"user" : user}) :
+        collection.delete_one({{"user" : user}})
+        collection.insert_one({"createdAt": datetime.utcnow(),
+        "user": user,
+        "otp": random_otp})
+    else:
+        collection.insert_one({"createdAt": datetime.utcnow(),
+        "user": user,
+        "otp": random_otp})
 
     # storing otp 
-    return "sent"
+    return jsonify(otp = random_otp)
 
 #otp validation part
-@app.route("/forgot_pw_check" ,  methods =['POST' , "GET"])
+@app.route("/forgot_pw_check" ,  methods =['POST' ])
 @API_required
 def forgot_password_validity():
 
@@ -255,7 +262,7 @@ def forgot_password_validity():
     
     #edge cases
     if not otp or not user:
-        return jsonify({"otp_verified" : False ,login : False, "token" :  None}) , 401
+        return jsonify({"otp_verified" : False ,login : False, "token" :  None}) , 205
 
     #connecting to mongo client
     db = client['research']
@@ -273,8 +280,8 @@ def forgot_password_validity():
         print(token)
 
         #resopnse
-        return flask.jsonify(otp_verified = True , login = True , token = token)
-    return flask.jsonify(otp_verified = False , login = False , token = None)
+        return flask.jsonify(otp_verified = True , login = True , token = token) , 200
+    return flask.jsonify(otp_verified = False , login = False , token = None) , 400
 
 load_dotenv()
 
