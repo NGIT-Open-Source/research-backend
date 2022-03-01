@@ -6,7 +6,7 @@ import requests
 url1 = 'http://127.0.0.1:5000/get_Data'
 url = 'http://127.0.0.1:5000/forgot_password'
 url3 = "http://192.168.214.190:80/download?id=9136950c-2992-4776-ab12-4d29ed3661c9"
-url4 = "http://192.168.214.190:80/upload"
+url4 = "https://storage.jayendramadara.repl.co/upload"
 
 myobj = {  "user" : "dimecorp" , }
 
@@ -16,7 +16,7 @@ myotp = {"otp"  : 33835}
 
 
 filee = {
-    "filee" : open(rf"test_data\0002.DCM" , "rb") 
+    "filee" : open(rf"C:\Users\jayendra\Downloads\CT0012.fragmented_no_bot_jpeg_baseline.51 (1).dcm" , "rb") 
 }
 upload = {
     "patient_name" : "mikasa" ,
@@ -25,7 +25,7 @@ upload = {
     "file"  : url1
 }
 
-x = requests.get(f"file:///C:/tai_jutsu/GENETICS/FILES/9136950c-2992-4776-ab12-4d29ed3661c9.dcm")
+x = requests.post(url4 , files=filee)
 
 print(x.text , x.status_code)
 
