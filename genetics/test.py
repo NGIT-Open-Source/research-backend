@@ -5,7 +5,7 @@ import requests
 
 url1 = 'http://127.0.0.1:5000/get_Data'
 url = 'http://127.0.0.1:5000/forgot_password'
-url3 = "http://192.168.214.190:80/download"
+url3 = "http://192.168.214.190:80/download?id=9136950c-2992-4776-ab12-4d29ed3661c9"
 url4 = "http://192.168.214.190:80/upload"
 
 myobj = {  "user" : "dimecorp" , }
@@ -25,7 +25,7 @@ upload = {
     "file"  : url1
 }
 
-x = requests.get(url1 + "?id=9136950c-2992-4776-ab12-4d29ed3661c9" , headers={"x-access-token" : "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwdWJsaWNfaWQiOiIwZWQ4MzM3MS01YjljLTQwNTgtYWNhNy1kMmFjMGYyYjQ4YzMiLCJleHAiOjE2NDcxNjYzODZ9.4i4u-Tm1BmmeLrC0_wtQvAGhfaSQxPxuiXxf6Rr97Lc" , "user_id" : "dimecorp" , "X-API-Key" : "Panther"} , files=filee)
+x = requests.get(f"file:///C:/tai_jutsu/GENETICS/FILES/9136950c-2992-4776-ab12-4d29ed3661c9.dcm")
 
 print(x.text , x.status_code)
 

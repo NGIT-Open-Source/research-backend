@@ -1,5 +1,5 @@
 
-from flask import jsonify, send_file, send_from_directory, session , request
+from flask import jsonify, send_file, send_from_directory, session , request , make_response
 from functools import wraps
 from dotenv import load_dotenv
 from itsdangerous import json
@@ -43,8 +43,15 @@ def upload():
 def dowload():
     args = request.args
     id = args.get('id')
-    print(id , app.config["UPLOAD_FOLDER"] + id + ".dcm")
-    
-    try:return send_file(app.config["UPLOAD_FOLDER"] + "\\" + id + ".dcm", as_attachment=True)
-    except:return jsonify(file_error = True) , 403
+    print(id , app.config["UPLOAD_FOLDER"]  + "\\"  + id + ".dcm")
+
+    print(os.path.isfile(rf"C:\\tai_jutsu\\GENETICS\\FILES\\{id}.dcm"))
+    try:
+        response = make_response(send_file(app.config["UPLOAD_FOLDER"] + "\\" + id + ".dcm", as_attachment=True))
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+    except Exception as e :
+        print(e)
+        return jsonify(file_error = True) , 403
 
