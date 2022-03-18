@@ -9,8 +9,8 @@ from functools import wraps
 import pprint
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, make_response , redirect
-import matplotlib.pyplot as plt
-import pydicom.data
+# import matplotlib.pyplot as plt
+# import pydicom.data
 
 
 

@@ -126,7 +126,7 @@ def signup():
         }, app.config['SECRET_KEY'] )
 
 
-        return make_response(jsonify({"email_exits" : False , 'token' : token}), 201)
+        return make_response(jsonify({"email_exits" : False , 'token' : token}), 200)
 
 
     except Exception as e:
@@ -176,9 +176,9 @@ def login():
             }, app.config['SECRET_KEY'])
         else:
             
-            return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : None}), 201)
+            return make_response(jsonify({"login" : False ,"user_exits" : True ,  'token' : None}), 201)
 
-        return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : token}), 201)
+        return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : token}), 200)
     except Exception as e:
         print(e ,  e.__traceback__.tb_lineno)
         # return str(e)

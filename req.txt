@@ -1,0 +1,7 @@
+Flask
+pymongo
+python-dotenv
+flask_mail
+PyJWT
+pymongo[srv]
+dnspython
