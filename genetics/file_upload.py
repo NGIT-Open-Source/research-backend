@@ -7,18 +7,14 @@ from pymongo import MongoClient
 from flask import jsonify, session
 from functools import wraps
 import pprint
-from firebase_admin import credentials, initialize_app, storage
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, make_response , redirect
 import matplotlib.pyplot as plt
 import pydicom.data
 
-#creds 
-cred = credentials.Certificate(rf"jayendra-madaram-firebase-adminsdk-p6rxo-603c7c7cad.json")
-initialize_app(cred, {'storageBucket': 'jayendra-madaram.appspot.com'})
 
 
-app.config['UPLOAD_FOLDER'] = rf"C:\tai_jutsu\GENETICS\test_phase2"
+app.config['UPLOAD_FOLDER'] = os.getcwd() + "\\test_phase2"
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -31,7 +27,7 @@ def token_required(f):
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
         if not token:
-            return jsonify({'message' : 'Token is missing !!'}), 401
+            return make_response(jsonify({'message' : 'Token is missing !!'})), 401
 
         # jwt validation
         try:
@@ -39,10 +35,11 @@ def token_required(f):
             db = client['research']
             collection = db["research_auth"]
             current_user = collection.find_one({"_id":data["public_id"]})
-        except:
-            return jsonify({
+        except Exception as e:
+            print(e ,  e.__traceback__.tb_lineno)
+            return make_response(jsonify({
                 'message' : 'Token is invalid !!'
-            }), 401
+            })), 401
 
         # returns the current logged in users contex to the routes
         return  f(current_user, *args, **kwargs)
@@ -55,14 +52,14 @@ def API_required(f):
         if 'X-API-Key' in request.headers:
             api_key = request.headers['X-API-Key']
         if not api_key:
-            return jsonify({'message' : 'APIKEY is missing !!'}), 401
+            return make_response(jsonify({'message' : 'APIKEY is missing !!'})), 401
         if str(api_key) == str(os.getenv('API_KEY')):
             # print("thank god")
             pass
         else:
-            return jsonify({
+            return make_response(jsonify({
                 'message' : 'Token is invalid !!'
-            }), 401
+            })), 401
 
         # returns the current logged in users contex to the routes
         return  f( *args, **kwargs)
@@ -83,7 +80,7 @@ def file_upload(current_user):
     # print()
     # print(current_user)
     if not patient or not body_label or not label or not filee:
-        return jsonify({"messgae" : "invalid labeling or empty labeling"}) , 401
+        return make_response(jsonify({"messgae" : "invalid labeling or empty labeling"})) , 401
     if patient in current_user["patients"].keys():
 
         if body_label in current_user["patients"][patient].keys():
@@ -117,7 +114,7 @@ def file_upload(current_user):
 @token_required
 def get_Data(current_user):
     del current_user["password"] 
-    return jsonify(current_user) , 200
+    return make_response(current_user) , 200
 
 load_dotenv()
 

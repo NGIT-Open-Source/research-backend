@@ -3,8 +3,8 @@ import json
 from pydantic import Json
 import requests
 
-url1 = 'http://127.0.0.1:5000/get_Data'
-url = 'http://127.0.0.1:5000/forgot_password'
+url1 = 'http://127.0.0.1:5000/login'
+url = 'https://mysterious-ravine-73085.herokuapp.com/forgot_password'
 url3 = "http://192.168.214.190:80/download?id=9136950c-2992-4776-ab12-4d29ed3661c9"
 url4 = "https://storage.jayendramadara.repl.co/upload"
 
@@ -19,15 +19,15 @@ filee = {
     "filee" : open(rf"C:\Users\jayendra\Downloads\CT0012.fragmented_no_bot_jpeg_baseline.51 (1).dcm" , "rb") 
 }
 upload = {
-    "patient_name" : "mikasa" ,
-    "body_part"    : "head",
-    "label"        : "hypertension_1",
-    "file"  : url1
+    "user" : "dimecorp",
+    "pw" : "random"
 }
 
-x = requests.post(url4 , files=filee)
+head = {"X-API-Key" : "Panther"}
 
-print(x.text , x.status_code)
+x = requests.post(url1 ,json=upload , headers=head)
+
+print(x.text )
 
 
 

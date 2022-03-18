@@ -38,7 +38,7 @@ def token_required(f):
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
         if not token:
-            return jsonify({'message' : 'Token is missing !!'}), 401
+            return make_response(jsonify({'message' : 'Token is missing !!'})), 401
 
         # jwt validation
         try:
@@ -46,10 +46,11 @@ def token_required(f):
             db = client['research']
             collection = db["research_auth"]
             current_user = collection.find_one({"_id":data["public_id"]})
-        except:
-            return jsonify({
+        except Exception as e:
+            print(e ,  e.__traceback__.tb_lineno)
+            return make_response(jsonify({
                 'message' : 'unable to find user'
-            }), 401
+            })), 401
 
         # returns the current logged in users contex to the routes
         return  f(current_user, *args, **kwargs)
@@ -62,14 +63,14 @@ def API_required(f):
         if 'X-API-Key' in request.headers:
             api_key = request.headers['X-API-Key']
         if not api_key:
-            return jsonify({'message' : 'APIKEY is missing !!'}), 511
+            return make_response(jsonify({'message' : 'APIKEY is missing !!'})), 511
         if str(api_key) == str(os.getenv('API_KEY')):
             # print("thank god")
             pass
         else:
-            return jsonify({
+            return make_response(jsonify({
                 'message' : 'api_key is invalid !!'
-            }), 401
+            })), 401
 
         # returns the current logged in users contex to the routes
         return  f( *args, **kwargs)
@@ -115,7 +116,7 @@ def signup():
 
         #validation and edgecase handlining
         if  user_obj != None :
-            return jsonify({"email_exits" : True , "token" : None}) , 401
+            return make_response(jsonify({"email_exits" : True , "token" : None})) , 401
         collection.insert_one(auth_obj)
 
         #jwt generation
@@ -129,7 +130,7 @@ def signup():
 
 
     except Exception as e:
-        print(e)
+        print(e ,  e.__traceback__.tb_lineno)
         return  make_response(
                 'Could not verify',
                 401,
@@ -140,14 +141,15 @@ def signup():
 
 
 @app.route('/login', methods =['POST' ])
-@API_required
+# @API_required
 def login():
     #data from requests
+    
     data = request.json
     try:
         user =  data["user"]
         pw = data["pw"]
-
+        
         #user and pw validation
         if not user  or not pw:
             return make_response(
@@ -159,22 +161,28 @@ def login():
         db = client['research']
         collection = db["research_auth"]
         user_obj = collection.find_one({"name":user})
-
+        
         #user object validation
         if  user_obj == None:
-            return jsonify({"user_exits" : False ,login : False, "token" : None}) , 401
+            print("lmaoooee")
+            return make_response(jsonify({"user_exits" : False ,login : False, "token" : None}) ) , 401
         
         # password validation and jwt generation
         if check_password_hash(user_obj["password"] , pw):
+            
             token = jwt.encode({
             'public_id':user_obj["_id"],
             'exp' : datetime.utcnow() + timedelta(weeks = 2)
             }, app.config['SECRET_KEY'])
         else:
-            return jsonify({"user_exits" : True ,login : False, "token" : None}) , 401
+            
+            return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : None}), 201)
 
         return make_response(jsonify({"login" : True ,"user_exits" : True ,  'token' : token}), 201)
-    except:
+    except Exception as e:
+        print(e ,  e.__traceback__.tb_lineno)
+        # return str(e)
+        # print(e , "stufffff")
         return  make_response(
                 'Could not verify',
                 401,
@@ -205,14 +213,14 @@ def forgot_password():
     data = request.json
     user =  data["user"]
     if not user:
-        return jsonify({"user_exits" : False ,login : False, "token" :  None}) , 205
+        return make_response(jsonify({"user_exits" : False ,login : False, "token" :  None})) , 205
     db = client['research']
     collection = db["research_auth"]
 
     #chekin is user already exits
     user_obj = collection.find_one({"name":user})
     if  user_obj == None:
-        return jsonify({"user_exits" : False ,login : False, "token" :  None}) , 401
+        return make_response(jsonify({"user_exits" : False ,login : False, "token" :  None})) , 401
     
     #smtp server initialization and otp generation
     port = 465  # For SSL
@@ -249,7 +257,7 @@ def forgot_password():
         "otp": random_otp})
 
     # storing otp 
-    return jsonify(otp = random_otp)
+    return make_response(jsonify(otp = random_otp))
 
 #otp validation part
 @app.route("/forgot_pw_check" ,  methods =['POST' ])
@@ -262,7 +270,7 @@ def forgot_password_validity():
     
     #edge cases
     if not otp or not user:
-        return jsonify({"otp_verified" : False ,login : False, "token" :  None}) , 205
+        return make_response(jsonify({"otp_verified" : False ,login : False, "token" :  None})) , 205
 
     #connecting to mongo client
     db = client['research']
@@ -280,8 +288,8 @@ def forgot_password_validity():
         print(token)
 
         #resopnse
-        return flask.jsonify(otp_verified = True , login = True , token = token) , 200
-    return flask.jsonify(otp_verified = False , login = False , token = None) , 400
+        return make_response(flask.jsonify(otp_verified = True , login = True , token = token)) , 200
+    return make_response(flask.jsonify(otp_verified = False , login = False , token = None)) , 400
 
 load_dotenv()
 
